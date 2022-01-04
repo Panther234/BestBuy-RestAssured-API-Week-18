@@ -25,6 +25,8 @@ public class StoreCRUDTest extends TestBaseStore {
     static String hours = "Mon: 10-9; Tue: 10-9; Wed: 10-9; Thurs: 10-9; Fri: 10-9; Sat: 10-9; Sun: 10-8";
     static int storeId;
 
+
+    // create new store and get StoreId from response and store in storeId variable
     @Test
     public void test001() {
 
@@ -47,31 +49,45 @@ public class StoreCRUDTest extends TestBaseStore {
                 .post();
         response.then().statusCode(201);
         response.prettyPrint();
+        String responseBody = response.getBody().asString();
+        storeId = response.jsonPath().get("id");
+        System.out.println("StoreID is in Test 001: " + storeId);
+
+
     }
 
-    //Get Store id of new added Store in Test001 and store in StoreId variable
+    //Get Store details of new added Store in Test001 using StoreId variable
     @Test
     public void test002() {
-        String p1 = "data.findAll{it.name='";
-        String p2 = "'}.get(0)";
 
+        Response response = given()
+                .pathParam("storeID", storeId)
+                .when()
+                .get("/{storeID}"); // get data of single Store by ID
+        response.then().statusCode(200); //to validate statusCode
+        response.prettyPrint(); //to print response into console
 
-        HashMap value =
-                given()
-                        .when()
-                        .get()
-                        .then()
-                        .statusCode(200)
-                        .extract()
-                        .path(p1 + name + p2);
-        System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(value));
-        storeId = (int) value.get("id");
+//Get Store id of new added Store in Test001 and store in StoreId variable
+//        String p1 = "data.findAll{it.id='";
+//        String p2 = "'}.get(0)";
+//
+//
+//        HashMap value =
+//                given()
+//                        .when()
+//                        .get()
+//                        .then()
+//                        .statusCode(200)
+//                        .extract()
+//                        .path(p1 + storeId + p2);
+//        System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(value));
+//        storeId = (int) value.get("id");
     }
 
     //update name,type,address using storeId -- (PUT) method and verify that its updated
     @Test
     public void test003() {
-        String p1 = "data.findAll{it.name='";
+        String p1 = "data.findAll{it.id='";
         String p2 = "'}.get(0)";
 
         //update
@@ -97,10 +113,10 @@ public class StoreCRUDTest extends TestBaseStore {
                 .pathParam("storeID", storeId)
                 .body(storePojo)
                 .when()
-                .put("/{storeID}")
-                .then().log().all().statusCode(200);
+                .put("/{storeID}") // get data of single Store by ID
+                .then().statusCode(200); //to validate statusCode
 
-        //verify that response through id with after  extract by Name
+//        //verify that response through id with after  extract by Name
         HashMap<String, Object> value =
 
                 given()
@@ -109,13 +125,13 @@ public class StoreCRUDTest extends TestBaseStore {
                         .then()
                         .statusCode(200)
                         .extract()
-                        .path(p1 + name + p2);
+                        .path(p1 + storeId + p2);
         System.out.println(new GsonBuilder().setPrettyPrinting().create().toJson(value));
     }
 
     //delete new added store record and verify that record deleted successfully
     @Test
-    public void test004(){
+    public void test004() {
 
         given()
                 .pathParam("storeID", storeId)
@@ -123,13 +139,12 @@ public class StoreCRUDTest extends TestBaseStore {
                 .delete("/{storeID}")
                 .then()
                 .statusCode(200);
-
+        System.out.println();
         given()
                 .pathParam("storeID", storeId)
                 .when()
                 .get("/{storeID}")
                 .then()
                 .statusCode(404);
-
     }
 }
